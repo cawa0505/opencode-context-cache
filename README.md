@@ -7,6 +7,8 @@ This project provides an OpenCode plugin that generates a stable, privacy-preser
 - `output.options.promptCacheKey`
 - model session headers (`x-session-id`, `conversation_id`, `session_id`)
 
+Observed result from a real run: input cache hit rate improved from a near-zero baseline to `97.99%` (`164736 / 168112`).
+
 ## Installation
 
 ### Recommended: directory-based auto-loading
@@ -43,6 +45,38 @@ If you prefer explicit loading via config:
 For global config, `./plugins/...` is resolved relative to `~/.config/opencode/`.
 
 If the file is already inside an auto-loaded plugin directory, this explicit entry is usually unnecessary.
+
+## Observed impact (example)
+
+Before enabling this plugin, cache hits were near zero in repeated sessions.
+
+After enabling the plugin, one observed run reported:
+
+```json
+{
+  "input_tokens": 168112,
+  "total_tokens": 173268,
+  "output_tokens": 5156,
+  "input_tokens_details": {
+    "cached_tokens": 164736
+  },
+  "output_tokens_details": {
+    "reasoning_tokens": 3698
+  }
+}
+```
+
+Derived metrics:
+
+- Input cache hit rate: `164736 / 168112 = 97.99%`
+- Uncached input tokens: `168112 - 164736 = 3376` (`2.01%`)
+- Cached input tokens reused: `164736`
+
+Interpretation:
+
+- Most prompt input was served from cache after key stabilization.
+- Compared with a near-zero-hit baseline, this indicates a major cache reuse improvement.
+- Actual latency/cost gains depend on model/provider pricing and cache policy.
 
 ## Compatibility
 
