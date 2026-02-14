@@ -16,27 +16,20 @@ Observed result from a real run: input cache hit rate improved from a near-zero 
 
 ## Installation
 
-### Recommended: directory-based auto-loading
+### Required: explicit config loading
 
-OpenCode automatically loads local plugins from:
+In this repository's verified setup, the plugin only takes effect when it is listed in the
+`plugin` field of `opencode.jsonc`. Copying the file into a plugins directory alone is not
+enough in this environment.
 
-- Project-level: `.opencode/plugins/`
-- Global: `~/.config/opencode/plugins/`
-
-Copy or symlink `plugins/opencode-context-cache.mjs` into one of those directories.
-
-Example (project-level):
+1. Put plugin file in a stable local path (example: global plugin dir):
 
 ```bash
-mkdir -p .opencode/plugins
-cp plugins/opencode-context-cache.mjs .opencode/plugins/opencode-context-cache.mjs
+mkdir -p ~/.config/opencode/plugins
+cp plugins/opencode-context-cache.mjs ~/.config/opencode/plugins/opencode-context-cache.mjs
 ```
 
-Restart OpenCode after adding the plugin.
-
-### Optional: explicit config loading
-
-If you prefer explicit loading via config:
+2. Add plugin entry in `opencode.jsonc`:
 
 ```jsonc
 {
@@ -47,18 +40,18 @@ If you prefer explicit loading via config:
 }
 ```
 
-For global config, `./plugins/...` is resolved relative to `~/.config/opencode/`.
+For global config (`~/.config/opencode/opencode.jsonc`), `./plugins/...` is resolved
+relative to `~/.config/opencode/`.
 
-If the file is already inside an auto-loaded plugin directory, this explicit entry is usually unnecessary.
+3. Restart OpenCode after editing config.
 
 ### Activation prerequisites (important)
 
 This plugin only takes effect after OpenCode actually loads the plugin file.
 
-Use one of the two methods below:
+Required method:
 
-1. Put `opencode-context-cache.mjs` into an auto-loaded plugin directory.
-2. Add it explicitly in `opencode.jsonc` with the `plugin` field.
+1. Add it explicitly in `opencode.jsonc` with the `plugin` field.
 
 `setCacheKey` / model cache flags only control cache behavior. They do not load the plugin by themselves.
 
@@ -92,6 +85,7 @@ Interpretation:
 
 - Most prompt input was served from cache after key stabilization.
 - Compared with a near-zero-hit baseline, this indicates a major cache reuse improvement.
+- The effect is often stronger behind AI API relay/gateway services, where unstable upstream session identifiers can otherwise reduce cache reuse.
 - Actual latency/cost gains depend on model/provider pricing and cache policy.
 
 ## Compatibility
@@ -115,18 +109,14 @@ OpenCode sessions can lose cache efficiency when session identifiers vary betwee
 - Stable cache key precedence with environment overrides
 - SHA256 hashing for privacy (raw key is not sent to server)
 - Digest detection to avoid double-hashing existing SHA256 values
+- Especially effective with AI API relay/gateway setups that benefit from stable cache/session identity
 - Optional debug logging to a local log file
 
 ## OpenCode loading behavior
 
-OpenCode can load this plugin in two ways:
-
-1. **Automatic local plugin loading** (recommended)
-   - Global: `~/.config/opencode/plugins/`
-   - Project: `.opencode/plugins/`
-2. **Explicit `plugin` entry** in `opencode.json` / `opencode.jsonc`
-
-To avoid confusion and accidental duplicate execution, use one loading method per plugin.
+For this project, use explicit `plugin` entry in `opencode.json` / `opencode.jsonc` as the
+source of truth. Directory auto-loading behavior may vary by runtime/version, so do not rely
+on file placement alone for activation.
 
 ## Repository layout
 
@@ -174,7 +164,7 @@ OpenCode config flags (often required for expected cache behavior):
 - `provider.<id>.models.<id>.options.cache`: if your provider/model exposes this flag and it is set to `false`, upstream prompt caching is effectively disabled.
 - `provider.<id>.models.<id>.options.store`: this is separate from prompt caching; for example, `store: false` controls response storage and does not replace `setCacheKey`.
 
-Minimal working `opencode.jsonc` example (explicit plugin loading + cache flags):
+Minimal working `opencode.jsonc` example (required explicit plugin loading + cache flags):
 
 ```jsonc
 {
@@ -202,7 +192,7 @@ Minimal working `opencode.jsonc` example (explicit plugin loading + cache flags)
 }
 ```
 
-If the plugin file is already in `.opencode/plugins/` or `~/.config/opencode/plugins/`, the `plugin` field above can be omitted.
+Do not omit the `plugin` field above in this setup.
 
 Environment variables:
 
@@ -231,10 +221,12 @@ The log prefix is `[context-cache]`.
 
 Use this checklist:
 
-1. Start or restart OpenCode.
-2. Ensure `OPENCODE_CONTEXT_CACHE_DEBUG=1` is set.
-3. Open the log file in your plugin directory.
-4. Confirm entries like:
+1. Confirm `opencode.jsonc` contains `"plugin": ["./plugins/opencode-context-cache.mjs"]`
+   (or the equivalent valid path in your setup).
+2. Start or restart OpenCode.
+3. Ensure `OPENCODE_CONTEXT_CACHE_DEBUG=1` is set.
+4. Open the log file in your plugin directory.
+5. Confirm entries like:
    - `Plugin initialized`
    - `Using cache key from ...`
    - `Set final cache key (hashed): ...`
@@ -248,14 +240,15 @@ If these lines appear, the plugin is loaded and processing requests.
   - Confirm `OPENCODE_CONTEXT_CACHE_DEBUG` is `1` or `true`.
 - Plugin not loading:
   - Verify filename and extension (`opencode-context-cache.mjs`).
-  - Verify plugin location (`~/.config/opencode/plugins/` or `.opencode/plugins/`).
+  - Verify `opencode.jsonc` includes a valid `plugin` entry for this file.
+  - Verify the `plugin` path is resolved relative to the config file location.
   - Restart OpenCode after changes.
 - Unexpected cache key changes:
   - The default key includes absolute working directory.
   - Moving or renaming the project path changes the key.
   - Use `OPENCODE_PROMPT_CACHE_KEY` for a fixed identity.
 - Potential duplicate execution:
-  - Avoid enabling both auto-loading and explicit `plugin` entry for the same file.
+  - If your runtime also auto-loads plugin directories, avoid loading the same file twice.
 
 ## Security recommendations
 
