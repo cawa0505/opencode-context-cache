@@ -1,0 +1,66 @@
+name: Bug report
+description: Report a reproducible issue with the plugin
+title: "bug: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting this issue.
+        Please provide enough detail so we can reproduce it quickly.
+
+  - type: input
+    id: opencode-version
+    attributes:
+      label: OpenCode version
+      description: Output of `opencode --version` (if available)
+      placeholder: eg. 0.6.2
+    validations:
+      required: false
+
+  - type: input
+    id: plugin-file
+    attributes:
+      label: Plugin path
+      description: Which plugin file are you loading?
+      placeholder: ~/.config/opencode/plugins/opencode-context-cache.mjs
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What should have happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What happened instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      description: Share exact steps to reproduce
+      placeholder: |
+        1. Set env var...
+        2. Start OpenCode...
+        3. Run prompt...
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Include lines from `context-cache.log` if possible
+      render: shell
+    validations:
+      required: false

@@ -1,0 +1,44 @@
+name: Feature request
+description: Propose an enhancement for opencode-context-cache
+title: "feat: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for sharing an idea.
+        Feature requests with clear use-cases are prioritized faster.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: What pain point are you trying to solve?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe your ideal API/behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Workarounds or other options you considered
+    validations:
+      required: false
+
+  - type: input
+    id: impact
+    attributes:
+      label: Expected impact
+      description: Example metrics (cache hit rate, latency, cost)
+      placeholder: eg. increase input cache hit from 20% to 80%
+    validations:
+      required: false

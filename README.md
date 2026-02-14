@@ -9,6 +9,11 @@ This project provides an OpenCode plugin that generates a stable, privacy-preser
 
 Observed result from a real run: input cache hit rate improved from a near-zero baseline to `97.99%` (`164736 / 168112`).
 
+## Community
+
+- Discussions: https://github.com/JackDrogon/opencode-context-cache/discussions
+- Issues: https://github.com/JackDrogon/opencode-context-cache/issues
+
 ## Installation
 
 ### Recommended: directory-based auto-loading
@@ -219,4 +224,4 @@ If these lines appear, the plugin is loaded and processing requests.
 
 ## License
 
-No license file is currently included in this repository.
+MIT. See `LICENSE`.

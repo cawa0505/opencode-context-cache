@@ -1,0 +1,51 @@
+title: "Share your cache hit rate"
+labels:
+  - showcase
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for sharing your results.
+        Real-world numbers help others evaluate this plugin.
+
+  - type: input
+    id: provider
+    attributes:
+      label: Provider/model
+      description: Which provider and model were used?
+      placeholder: eg. rightcode / gpt-5.3-codex
+    validations:
+      required: true
+
+  - type: textarea
+    id: before
+    attributes:
+      label: Before enabling plugin
+      description: Share baseline metrics if available
+      placeholder: eg. cached_tokens nearly 0 across repeated sessions
+    validations:
+      required: false
+
+  - type: textarea
+    id: after
+    attributes:
+      label: After enabling plugin
+      description: Share token stats and calculated hit rate
+      placeholder: |
+        input_tokens: ...
+        cached_tokens: ...
+        hit_rate: ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: setup
+    attributes:
+      label: Setup details
+      description: Relevant env vars and plugin loading method
+      placeholder: |
+        OPENCODE_PROMPT_CACHE_KEY=...
+        OPENCODE_CONTEXT_CACHE_DEBUG=1
+        loaded from ~/.config/opencode/plugins/
+    validations:
+      required: false
