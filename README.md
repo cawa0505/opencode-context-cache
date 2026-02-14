@@ -51,6 +51,17 @@ For global config, `./plugins/...` is resolved relative to `~/.config/opencode/`
 
 If the file is already inside an auto-loaded plugin directory, this explicit entry is usually unnecessary.
 
+### Activation prerequisites (important)
+
+This plugin only takes effect after OpenCode actually loads the plugin file.
+
+Use one of the two methods below:
+
+1. Put `opencode-context-cache.mjs` into an auto-loaded plugin directory.
+2. Add it explicitly in `opencode.jsonc` with the `plugin` field.
+
+`setCacheKey` / model cache flags only control cache behavior. They do not load the plugin by themselves.
+
 ## Observed impact (example)
 
 Before enabling this plugin, cache hits were near zero in repeated sessions.
@@ -156,6 +167,42 @@ The plugin registers the `chat.params` hook and:
 This keeps routing and prompt cache identity aligned.
 
 ## Configuration
+
+OpenCode config flags (often required for expected cache behavior):
+
+- `provider.<id>.options.setCacheKey: true`: ensures the provider layer forwards a cache key when this plugin sets `output.options.promptCacheKey`.
+- `provider.<id>.models.<id>.options.cache`: if your provider/model exposes this flag and it is set to `false`, upstream prompt caching is effectively disabled.
+- `provider.<id>.models.<id>.options.store`: this is separate from prompt caching; for example, `store: false` controls response storage and does not replace `setCacheKey`.
+
+Minimal working `opencode.jsonc` example (explicit plugin loading + cache flags):
+
+```jsonc
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": [
+    "./plugins/opencode-context-cache.mjs"
+  ],
+  "provider": {
+    "openai": {
+      "options": {
+        "setCacheKey": true
+      },
+      "models": {
+        "gpt-5-3-codex-high": {
+          "options": {
+            // "cache": false,
+            // If your provider supports the cache flag, setting it to false
+            // disables upstream prompt cache reuse.
+            "store": false
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+If the plugin file is already in `.opencode/plugins/` or `~/.config/opencode/plugins/`, the `plugin` field above can be omitted.
 
 Environment variables:
 
