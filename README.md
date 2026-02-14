@@ -18,13 +18,13 @@ OpenCode automatically loads local plugins from:
 - Project-level: `.opencode/plugins/`
 - Global: `~/.config/opencode/plugins/`
 
-Copy or symlink `plugins/enhanced-cache.mjs` into one of those directories.
+Copy or symlink `plugins/opencode-context-cache.mjs` into one of those directories.
 
 Example (project-level):
 
 ```bash
 mkdir -p .opencode/plugins
-cp plugins/enhanced-cache.mjs .opencode/plugins/enhanced-cache.mjs
+cp plugins/opencode-context-cache.mjs .opencode/plugins/opencode-context-cache.mjs
 ```
 
 Restart OpenCode after adding the plugin.
@@ -37,7 +37,7 @@ If you prefer explicit loading via config:
 {
   "$schema": "https://opencode.ai/config.json",
   "plugin": [
-    "./plugins/enhanced-cache.mjs"
+    "./plugins/opencode-context-cache.mjs"
   ]
 }
 ```
@@ -84,6 +84,10 @@ Interpretation:
 - Provider support: provider-agnostic (works across all configured providers)
 - Module format: ESM (`.mjs`)
 
+## Exports
+
+- Default export: `OpenCodeContextCachePlugin`
+
 ## Why this plugin exists
 
 OpenCode sessions can lose cache efficiency when session identifiers vary between providers, environments, or runs. This plugin standardizes cache key generation with predictable precedence and sends only a SHA256 digest upstream.
@@ -110,7 +114,7 @@ To avoid confusion and accidental duplicate execution, use one loading method pe
 
 ## Repository layout
 
-- `plugins/enhanced-cache.mjs`: main plugin implementation
+- `plugins/opencode-context-cache.mjs`: main plugin implementation
 
 ## Cache key precedence
 
@@ -152,12 +156,12 @@ Environment variables:
 
 - `OPENCODE_PROMPT_CACHE_KEY`: highest-priority manual cache key override
 - `OPENCODE_STICKY_SESSION_ID`: secondary manual override
-- `OPENCODE_CACHE_DEBUG`: set to `1` or `true` to enable debug logging
+- `OPENCODE_CONTEXT_CACHE_DEBUG`: set to `1` or `true` to enable debug logging
 
 Example shell setup:
 
 ```bash
-export OPENCODE_CACHE_DEBUG=1
+export OPENCODE_CONTEXT_CACHE_DEBUG=1
 # Optional override:
 # export OPENCODE_PROMPT_CACHE_KEY="team-cache-key"
 ```
@@ -166,16 +170,17 @@ export OPENCODE_CACHE_DEBUG=1
 
 When debug mode is enabled, logs are appended to:
 
-- `enhanced-cache.log` in the same directory as the plugin file
+- `context-cache.log` in the same directory as the plugin file
 
 Log entries include timestamp, process ID, key source, and hashed output details.
+The log prefix is `[context-cache]`.
 
 ## Verify plugin is active
 
 Use this checklist:
 
 1. Start or restart OpenCode.
-2. Ensure `OPENCODE_CACHE_DEBUG=1` is set.
+2. Ensure `OPENCODE_CONTEXT_CACHE_DEBUG=1` is set.
 3. Open the log file in your plugin directory.
 4. Confirm entries like:
    - `Plugin initialized`
@@ -188,9 +193,9 @@ If these lines appear, the plugin is loaded and processing requests.
 
 - No log file created:
   - Check file path and permissions for the plugin directory.
-  - Confirm `OPENCODE_CACHE_DEBUG` is `1` or `true`.
+  - Confirm `OPENCODE_CONTEXT_CACHE_DEBUG` is `1` or `true`.
 - Plugin not loading:
-  - Verify filename and extension (`enhanced-cache.mjs`).
+  - Verify filename and extension (`opencode-context-cache.mjs`).
   - Verify plugin location (`~/.config/opencode/plugins/` or `.opencode/plugins/`).
   - Restart OpenCode after changes.
 - Unexpected cache key changes:

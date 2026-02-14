@@ -1,5 +1,5 @@
 /**
- * opencode plugin: Enhanced Prompt Cache & Session Management
+ * opencode plugin: OpenCode Context Cache
  *
  * Features:
  * - Per-project cache isolation using absolute path with user@host prefix
@@ -27,15 +27,15 @@ import { appendFileSync, existsSync, mkdirSync } from "fs";
 import { fileURLToPath } from "url";
 import { createHash } from "crypto";
 
-const SESSION_HEADER_KEYS = ["x-session-id", "conversation_id", "session_id"];
-const ENV_PROMPT_CACHE_KEY = "OPENCODE_PROMPT_CACHE_KEY";
-const ENV_STICKY_SESSION_ID = "OPENCODE_STICKY_SESSION_ID";
-const ENV_CACHE_DEBUG = "OPENCODE_CACHE_DEBUG";
+const SESSION_ID_HEADER_NAMES = ["x-session-id", "conversation_id", "session_id"];
+const PROMPT_CACHE_KEY_ENV_VAR = "OPENCODE_PROMPT_CACHE_KEY";
+const STICKY_SESSION_ID_ENV_VAR = "OPENCODE_STICKY_SESSION_ID";
+const CACHE_DEBUG_ENV_VAR = "OPENCODE_CONTEXT_CACHE_DEBUG";
 
 // Get plugin directory (where this file is located)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const LOG_FILE = join(__dirname, "enhanced-cache.log");
+const LOG_FILE_PATH = join(__dirname, "context-cache.log");
 
 class DebugLogger {
   constructor(logFilePath) {
@@ -59,8 +59,8 @@ class DebugLogger {
   isEnabled() {
     if (this.debugEnabled === null) {
       this.debugEnabled =
-        process?.env?.[ENV_CACHE_DEBUG] === "1" ||
-        process?.env?.[ENV_CACHE_DEBUG] === "true";
+        process?.env?.[CACHE_DEBUG_ENV_VAR] === "1" ||
+        process?.env?.[CACHE_DEBUG_ENV_VAR] === "true";
     }
     return this.debugEnabled;
   }
@@ -86,14 +86,14 @@ class DebugLogger {
 
     // Keep each log entry on a single physical line.
     const safeMessage = message.replace(/\n/g, "\\n").replace(/\r/g, "\\r");
-    const logLine = `[${timestamp}] [pid:${pid}] [enhanced-cache] ${safeMessage}\n`;
+    const logLine = `[${timestamp}] [pid:${pid}] [context-cache] ${safeMessage}\n`;
 
     try {
       // O_APPEND keeps each append atomic on POSIX filesystems.
       appendFileSync(this.logFilePath, logLine, "utf8");
     } catch {
       // Fallback to stderr when file append fails.
-      console.error(`[pid:${pid}] [enhanced-cache]`, ...args);
+      console.error(`[pid:${pid}] [context-cache]`, ...args);
     }
   }
 
@@ -162,37 +162,37 @@ class CacheKeyResolver {
     }
   }
 
-  getHeaderSessionValue(input) {
+  getSessionIdFromHeaders(input) {
     const headers =
       input?.model?.headers && typeof input.model.headers === "object"
         ? input.model.headers
         : {};
 
-    const value = SESSION_HEADER_KEYS.map((key) => headers[key])
+    const value = SESSION_ID_HEADER_NAMES.map((key) => headers[key])
       .find((v) => typeof v === "string" && v.trim())
       ?.trim?.();
 
     return value || null;
   }
 
-  resolve(input) {
+  resolveCacheKey(input) {
     let rawKey = null;
     let source = null;
     let alreadyHashed = false;
 
     // 1) Explicit env override.
-    const promptCacheKey = this.getTrimmedEnv(ENV_PROMPT_CACHE_KEY);
+    const promptCacheKey = this.getTrimmedEnv(PROMPT_CACHE_KEY_ENV_VAR);
     if (promptCacheKey) {
       rawKey = promptCacheKey;
-      source = ENV_PROMPT_CACHE_KEY;
+      source = PROMPT_CACHE_KEY_ENV_VAR;
     }
 
     // 2) Secondary env override.
     if (!rawKey) {
-      const stickySessionKey = this.getTrimmedEnv(ENV_STICKY_SESSION_ID);
+      const stickySessionKey = this.getTrimmedEnv(STICKY_SESSION_ID_ENV_VAR);
       if (stickySessionKey) {
         rawKey = stickySessionKey;
-        source = ENV_STICKY_SESSION_ID;
+        source = STICKY_SESSION_ID_ENV_VAR;
       }
     }
 
@@ -207,7 +207,7 @@ class CacheKeyResolver {
 
     // 4) Existing model headers only when no stable default exists.
     if (!rawKey) {
-      const headerValue = this.getHeaderSessionValue(input);
+      const headerValue = this.getSessionIdFromHeaders(input);
       if (headerValue) {
         rawKey = headerValue;
         source = "model headers";
@@ -265,7 +265,7 @@ class CacheKeyApplier {
           ? input.model.headers
           : (input.model.headers = {});
 
-      for (const headerKey of SESSION_HEADER_KEYS) {
+      for (const headerKey of SESSION_ID_HEADER_NAMES) {
         headers[headerKey] = cacheKey;
       }
 
@@ -286,7 +286,7 @@ class CacheKeyApplier {
   }
 }
 
-class EnhancedCachePluginService {
+class ContextCachePluginRuntime {
   constructor({ logger, keyResolver, keyApplier }) {
     this.logger = logger;
     this.keyResolver = keyResolver;
@@ -302,7 +302,7 @@ class EnhancedCachePluginService {
     this.logger.logInputStructureOnce(input);
     this.logger.log("Processing provider");
 
-    const cacheKeyInfo = this.keyResolver.resolve(input);
+    const cacheKeyInfo = this.keyResolver.resolveCacheKey(input);
     if (!cacheKeyInfo) {
       this.logger.log("No cache key available");
       return;
@@ -312,19 +312,26 @@ class EnhancedCachePluginService {
   }
 }
 
-const logger = new DebugLogger(LOG_FILE);
+const logger = new DebugLogger(LOG_FILE_PATH);
 const keyResolver = new CacheKeyResolver(logger);
 const keyApplier = new CacheKeyApplier(logger);
-const pluginService = new EnhancedCachePluginService({ logger, keyResolver, keyApplier });
+const runtime = new ContextCachePluginRuntime({
+  logger,
+  keyResolver,
+  keyApplier,
+});
 
-export const EnhancedCachePlugin = async () => {
-  pluginService.initialize();
+export const OpenCodeContextCachePlugin = async () => {
+  runtime.initialize();
 
   return {
     "chat.params": async (input, output) => {
-      pluginService.handleChatParams(input, output);
+      runtime.handleChatParams(input, output);
     },
   };
 };
 
-export default EnhancedCachePlugin;
+// Backward-compatible export alias.
+export const EnhancedCachePlugin = OpenCodeContextCachePlugin;
+
+export default OpenCodeContextCachePlugin;
