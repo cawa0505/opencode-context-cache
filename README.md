@@ -47,7 +47,7 @@ The key is SHA256-hashed before being sent to the server. Already-hashed values 
 export OPENCODE_CONTEXT_CACHE_DEBUG=1
 ```
 
-Logs are written to `context-cache.log` next to the plugin file with timestamps, PID, and key resolution details.
+Logs are written to `~/.cache/opencode-context-cache.log` with timestamps, PID, and key resolution details.
 
 ## Exports
 

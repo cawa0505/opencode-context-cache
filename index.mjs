@@ -4,7 +4,7 @@
  * Features:
  * - Per-project cache isolation using absolute path with user@host prefix
  * - Support for ALL providers (not just specific ones)
- * - Debug logging to file (same directory as plugin)
+ * - Debug logging to file (~/.cache/opencode-context-cache.log)
  * - Smart cache key generation with multiple fallbacks
  * - Unified session header and cache key management
  * - SHA256 hashed cache key for privacy (server sees only hash)
@@ -21,21 +21,17 @@
  * 5. opencode sessionID (fallback)
  */
 
-import { hostname, userInfo } from "os";
+import { hostname, homedir, userInfo } from "os";
 import { dirname, join } from "path";
 import { appendFileSync, existsSync, mkdirSync } from "fs";
-import { fileURLToPath } from "url";
-import { createHash } from "crypto";
 
 const SESSION_ID_HEADER_NAMES = ["x-session-id", "conversation_id", "session_id"];
 const PROMPT_CACHE_KEY_ENV_VAR = "OPENCODE_PROMPT_CACHE_KEY";
 const STICKY_SESSION_ID_ENV_VAR = "OPENCODE_STICKY_SESSION_ID";
 const CACHE_DEBUG_ENV_VAR = "OPENCODE_CONTEXT_CACHE_DEBUG";
 
-// Get plugin directory (where this file is located)
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const LOG_FILE_PATH = join(__dirname, "context-cache.log");
+// Debug log lives in ~/.cache so it's easy to find regardless of install location.
+const LOG_FILE_PATH = join(homedir(), ".cache", "opencode-context-cache.log");
 
 class DebugLogger {
   constructor(logFilePath) {
