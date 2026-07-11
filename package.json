@@ -42,6 +42,9 @@
       "url": "https://github.com/JackDrogon"
     }
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "engines": {
     "node": ">=18"
   }
