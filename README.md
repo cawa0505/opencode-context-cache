@@ -18,25 +18,18 @@ npm install @jimmyyen/opencode-context-cache
 
 ## Usage
 
-Add to your `opencode.jsonc` plugin array. The package is resolved via Node module resolution, so you reference it by name:
+Add to your `opencode.jsonc` plugin array:
 
 ```jsonc
 {
   "$schema": "https://opencode.ai/config.json",
   "plugin": [
     "@jimmyyen/opencode-context-cache"
-  ],
-  "provider": {
-    "openai": {
-      "options": {
-        "setCacheKey": true
-      }
-    }
-  }
+  ]
 }
 ```
 
-The plugin auto-registers on the `chat.params` hook at import time. No additional setup needed after listing it in `plugin`.
+That's it — listed = enabled, removed = disabled. No provider options needed. The plugin auto-registers on the `chat.params` hook at import time.
 
 ## Cache key precedence
 
