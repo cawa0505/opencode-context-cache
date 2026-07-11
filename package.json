@@ -1,6 +1,6 @@
 {
   "name": "@jimmyyen/opencode-context-cache",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "OpenCode plugin for stable, privacy-preserving prompt cache key and sticky session management. Fork of JackDrogon/opencode-context-cache.",
   "type": "module",
   "main": "./index.mjs",
