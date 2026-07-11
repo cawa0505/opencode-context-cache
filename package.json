@@ -29,12 +29,12 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jimmyyen/opencode-context-cache.git"
+    "url": "git+https://github.com/cawa0505/opencode-context-cache.git"
   },
   "bugs": {
-    "url": "https://github.com/jimmyyen/opencode-context-cache/issues"
+    "url": "https://github.com/cawa0505/opencode-context-cache/issues"
   },
-  "homepage": "https://github.com/jimmyyen/opencode-context-cache#readme",
+  "homepage": "https://github.com/cawa0505/opencode-context-cache#readme",
   "contributors": [
     {
       "name": "Jack Drogon",
