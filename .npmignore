@@ -1,0 +1,5 @@
+context-cache.log
+context-cache.log.*
+plugins/
+.github/
+.gitignore
