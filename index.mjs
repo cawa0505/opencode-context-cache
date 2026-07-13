@@ -301,13 +301,14 @@ class ContextCachePluginRuntime {
     this.keyApplier = keyApplier;
   }
 
-  initialize() {
+  initialize(ctx) {
+    this.ctx = ctx;
+    startAutoUpdate(ctx);
     this.logger.log("Plugin initialized");
     this.logger.log("Log file location:", this.logger.logFilePath);
   }
 
   handleChatParams(input, output) {
-    startAutoUpdate(input);
     this.logger.logInputStructureOnce(input);
     this.logger.log("Processing provider");
 
@@ -330,8 +331,8 @@ const runtime = new ContextCachePluginRuntime({
   keyApplier,
 });
 
-export const OpenCodeContextCachePlugin = async () => {
-  runtime.initialize();
+export const OpenCodeContextCachePlugin = async (ctx) => {
+  runtime.initialize(ctx);
 
   return {
     "chat.params": async (input, output) => {
