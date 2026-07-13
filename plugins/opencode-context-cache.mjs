@@ -32,7 +32,7 @@ const PROMPT_CACHE_KEY_ENV_VAR = "OPENCODE_PROMPT_CACHE_KEY";
 const STICKY_SESSION_ID_ENV_VAR = "OPENCODE_STICKY_SESSION_ID";
 const CACHE_DEBUG_ENV_VAR = "OPENCODE_CONTEXT_CACHE_DEBUG";
 
-// Get plugin directory (where this file is located)
+import { startAutoUpdate } from "../src/auto-update.mjs";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const LOG_FILE_PATH = join(__dirname, "context-cache.log");
@@ -293,23 +293,26 @@ class ContextCachePluginRuntime {
     this.keyApplier = keyApplier;
   }
 
-  initialize() {
+  initialize(ctx) {
     this.logger.log("Plugin initialized");
     this.logger.log("Log file location:", this.logger.logFilePath);
+    this.startAutoUpdate(ctx);
   }
 
-  handleChatParams(input, output) {
-    this.logger.logInputStructureOnce(input);
-    this.logger.log("Processing provider");
-
-    const cacheKeyInfo = this.keyResolver.resolveCacheKey(input);
-    if (!cacheKeyInfo) {
-      this.logger.log("No cache key available");
-      return;
+    handleChatParams(input, output) {
+      this.logger.logInputStructureOnce(input);
+      this.logger.log("Processing provider");
+      
+      this.startAutoUpdate(input);
+      
+      const cacheKeyInfo = this.keyResolver.resolveCacheKey(input);
+      if (!cacheKeyInfo) {
+        this.logger.log("No cache key available");
+        return;
+      }
+  
+      this.keyApplier.apply(input, output, cacheKeyInfo.hashed);
     }
-
-    this.keyApplier.apply(input, output, cacheKeyInfo.hashed);
-  }
 }
 
 const logger = new DebugLogger(LOG_FILE_PATH);
@@ -323,6 +326,8 @@ const runtime = new ContextCachePluginRuntime({
 
 export const OpenCodeContextCachePlugin = async () => {
   runtime.initialize();
+runtime.startAutoUpdate(ctx);
+runtime.startAutoUpdate(ctx);
 
   return {
     "chat.params": async (input, output) => {
