@@ -5,15 +5,17 @@ import { spawn } from "node:child_process";
 
 const PACKAGE_NAME = "@jimmyyen/opencode-context-cache";
 const REGISTRY = "https://registry.npmjs.org";
-const CHECK_INTERVAL_MS = 60 * 60 * 1000; // 1h dedup window across instances
+const CHECK_INTERVAL_MS = 60 * 60 * 1000;
 const INIT_DELAY_MS = 5000;
 const STAMP = "last-update-check.json";
 
-function here(): string {
-  return dirname(fileURLToPath(import.meta.url)); // .../dist
+let started = false;
+
+function here() {
+  return dirname(fileURLToPath(import.meta.url));
 }
 
-function getCurrentVersion(): string | null {
+function getCurrentVersion() {
   try {
     const pkg = join(here(), "..", "package.json");
     if (existsSync(pkg)) return JSON.parse(readFileSync(pkg, "utf-8")).version ?? null;
@@ -21,7 +23,7 @@ function getCurrentVersion(): string | null {
   return null;
 }
 
-function getInstallRoot(): string | null {
+function getInstallRoot() {
   let dir = here();
   for (let i = 0; i < 12; i++) {
     const parent = dirname(dir);
@@ -32,24 +34,24 @@ function getInstallRoot(): string | null {
   return null;
 }
 
-async function getLatestVersion(signal: AbortSignal): Promise<string | null> {
+async function getLatestVersion(signal) {
   try {
     const res = await fetch(`${REGISTRY}/${PACKAGE_NAME.replace("/", "%2f")}/latest`, { signal });
     if (!res.ok) return null;
-    const data = (await res.json()) as { version?: string };
+    const data = await res.json();
     return data.version ?? null;
   } catch {
     return null;
   }
 }
 
-function claimSlot(root: string | null): boolean {
+function claimSlot(root) {
   if (!root) return true;
   try {
     const file = join(root, STAMP);
     if (existsSync(file)) {
       try {
-        const raw = JSON.parse(readFileSync(file, "utf-8")) as { lastCheckedMs?: unknown };
+        const raw = JSON.parse(readFileSync(file, "utf-8"));
         const last = typeof raw.lastCheckedMs === "number" ? raw.lastCheckedMs : 0;
         if (Number.isFinite(last) && Date.now() - last < CHECK_INTERVAL_MS) return false;
       } catch {}
@@ -64,7 +66,7 @@ function claimSlot(root: string | null): boolean {
   }
 }
 
-function installLatest(root: string, signal: AbortSignal): Promise<boolean> {
+function installLatest(root, signal) {
   return new Promise((resolve) => {
     const child = spawn(
       "npm",
@@ -76,19 +78,16 @@ function installLatest(root: string, signal: AbortSignal): Promise<boolean> {
   });
 }
 
-function toast(
-  ctx: any,
-  title: string,
-  message: string,
-  variant: "info" | "success" | "warning" | "error",
-): void {
+function toast(ctx, title, message, variant) {
   try {
-    const tui = (ctx.client as { tui?: { showToast?: (o: { body: any }) => unknown } }).tui;
+    const tui = ctx?.client?.tui;
     tui?.showToast?.({ body: { title, message, variant, duration: 8000 } });
   } catch {}
 }
 
-export function startAutoUpdate(ctx: any): void {
+export function startAutoUpdate(ctx) {
+  if (started) return;
+  started = true;
   if (process.env.CODE_CONTEXT_CACHE_AUTOUPDATE === "0") return;
   const timer = setTimeout(() => {
     void (async () => {

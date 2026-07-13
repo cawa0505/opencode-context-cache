@@ -1,8 +1,8 @@
 # @jimmyyen/opencode-context-cache
  
 OpenCode plugin for stable, privacy-preserving prompt cache key and sticky session management.
- 
-Forked from [JackDrogon/opencode-context-cache](https://github.com/JackDrogon/opencode-context-cache).
+
+Concept from [JackDrogon/opencode-context-cache](https://github.com/JackDrogon/opencode-context-cache), reimplemented with auto-update and Magic Context compatibility.
  
 ## Why
  
@@ -44,6 +44,14 @@ If `@cortexkit/magic-context` is active, this plugin automatically switches to "
  
 The key is SHA256-hashed before being sent to the server. Already-hashed values (64-char hex) are detected and passed through without re-hashing.
  
+## Auto-update
+
+The plugin checks npm for a newer version on startup (once per hour, deduplicated across instances). To opt out:
+
+```bash
+export CODE_CONTEXT_CACHE_AUTOUPDATE=0
+```
+
 ## Debug logging
  
 ```bash

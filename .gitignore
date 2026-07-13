@@ -1,3 +1,8 @@
 context-cache.log
 node_modules/
 .cortexkit/
+token-optimizer/
+dist/
+*.db
+*.db-shm
+*.db-wal

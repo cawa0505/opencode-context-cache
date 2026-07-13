@@ -24,6 +24,14 @@
 import { hostname, homedir, userInfo } from "os";
 import { dirname, join } from "path";
 import { appendFileSync, existsSync, mkdirSync } from "fs";
+import { createHash } from "crypto";
+import { createRequire } from "module";
+import { startAutoUpdate } from "./src/auto-update.mjs";
+
+// ponytail: detect Magic Context once at load; skip session headers if present
+const __require = createRequire(import.meta.url);
+let magicContextDetected = false;
+try { __require.resolve("@cortexkit/magic-context"); magicContextDetected = true; } catch {}
 
 const SESSION_ID_HEADER_NAMES = ["x-session-id", "conversation_id", "session_id"];
 const PROMPT_CACHE_KEY_ENV_VAR = "OPENCODE_PROMPT_CACHE_KEY";
@@ -278,7 +286,11 @@ class CacheKeyApplier {
 
   apply(input, output, cacheKey) {
     this.applyPromptCacheKey(output, cacheKey);
-    this.applySessionHeaders(input, cacheKey);
+    if (magicContextDetected) {
+      this.logger.log("Magic Context detected; skipping session headers (only promptCacheKey)");
+    } else {
+      this.applySessionHeaders(input, cacheKey);
+    }
   }
 }
 
@@ -295,6 +307,7 @@ class ContextCachePluginRuntime {
   }
 
   handleChatParams(input, output) {
+    startAutoUpdate(input);
     this.logger.logInputStructureOnce(input);
     this.logger.log("Processing provider");
 
