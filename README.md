@@ -1,5 +1,9 @@
 # @jimmyyen/opencode-context-cache
- 
+
+> **⚠️ DEPRECATED** — This plugin is no longer actively maintained. It stays
+> published for existing users, but there will be no further updates and new
+> projects should not adopt it.
+
 OpenCode plugin for stable, privacy-preserving prompt cache key and sticky session management.
 
 Concept from [JackDrogon/opencode-context-cache](https://github.com/JackDrogon/opencode-context-cache), reimplemented with auto-update and Magic Context compatibility.
